@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credentials Checker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1115;
+            --panel: #161a21;
+            --panel-border: #272c36;
+            --text: #e7e9ee;
+            --muted: #8b93a3;
+            --accent: #5b8cff;
+            --accent-hover: #4572e0;
+            --success: #2fbf71;
+            --failed: #e2574c;
+            --unreachable: #8b93a3;
+            --error: #e0a33d;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 32px 16px;
+        }
+        .wrap {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        header h1 {
+            margin: 0 0 6px 0;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+        header p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .badge-tag {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 11px;
+            color: var(--muted);
+            border: 1px solid var(--panel-border);
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .form-group { margin-bottom: 14px; }
+        .form-group.full { grid-column: 1 / -1; }
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--muted);
+        }
+        input[type="text"], input[type="password"], textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: #0f1115;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            font-family: 'Inter', monospace;
+            resize: vertical;
+        }
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .checks-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            padding: 14px 0;
+            border-top: 1px solid var(--panel-border);
+            border-bottom: 1px solid var(--panel-border);
+            margin: 10px 0 18px 0;
+        }
+        .check-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+        .check-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent);
+        }
+        .port-inline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .port-inline input[type="text"] {
+            width: 90px;
+            padding: 6px 10px;
+        }
+        .button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.15s ease;
+        }
+        .button:hover { background: var(--accent-hover); }
+        .button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .button.secondary {
+            background: transparent;
+            border: 1px solid var(--panel-border);
+            color: var(--text);
+            width: auto;
+            padding: 8px 14px;
+            font-size: 13px;
+        }
+        .button.secondary:hover { border-color: var(--accent); }
+
+        .summary-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .stat {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+        }
+        .stat .num { font-size: 22px; font-weight: 700; }
+        .stat .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+        .stat.success .num { color: var(--success); }
+        .stat.failed .num { color: var(--failed); }
+        .stat.unreachable .num { color: var(--unreachable); }
+        .stat.error .num { color: var(--error); }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        th {
+            text-align: left;
+            color: var(--muted);
+            font-weight: 600;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--panel-border);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #1d212a;
+            vertical-align: top;
+        }
+        tr:last-child td { border-bottom: none; }
+        .mono { font-family: 'SFMono-Regular', Consolas, monospace; }
+        .status-pill {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        .status-success { background: rgba(47,191,113,0.15); color: var(--success); }
+        .status-failed { background: rgba(226,87,76,0.15); color: var(--failed); }
+        .status-unreachable { background: rgba(139,147,163,0.15); color: var(--unreachable); }
+        .status-error { background: rgba(224,163,61,0.15); color: var(--error); }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+        .table-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .table-header-row h2 { margin: 0; font-size: 16px; }
+        .elapsed { font-size: 12px; color: var(--muted); margin-left: 8px; }
+
+        #loading {
+            display: none;
+            text-align: center;
+            padding: 16px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--panel-border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header>
+            <h1>Credentials Checker</h1>
+            <p>Bulk SMB / SSH / FTP credential validation across a target list</p>
+            <span class="badge-tag">Authorized testing only</span>
+        </header>
+
+        <div class="panel">
+            <form method="POST" action="/" id="checkForm">
+                <div class="form-group full">
+                    <label for="ip_addresses">Target IPs (one per line)</label>
+                    <textarea name="ip_addresses" id="ip_addresses" rows="5" placeholder="10.0.0.1&#10;10.0.0.2&#10;192.168.1.50" required>{{ request.form.get('ip_addresses', '') }}</textarea>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="username">Username <span style="font-weight:400;">(not needed for ping-only)</span></label>
+                        <input type="text" name="username" id="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password <span style="font-weight:400;">(not needed for ping-only)</span></label>
+                        <input type="password" name="password" id="password">
+                    </div>
+                </div>
+
+                <div class="checks-row">
+                    <label class="check-item"><input type="checkbox" name="ping_enabled" id="ping_enabled" checked onchange="updateButtonLabel()"> Ping (reachability)</label>
+                    <label class="check-item"><input type="checkbox" name="smb_enabled" id="smb_enabled" onchange="updateButtonLabel()"> SMB (445)</label>
+                    <label class="check-item"><input type="checkbox" name="ssh_enabled" id="ssh_enabled" onchange="updateButtonLabel()"> SSH (22)</label>
+                    <label class="check-item"><input type="checkbox" name="ftp_enabled" id="ftp_enabled" onchange="updateButtonLabel()"> FTP (21)</label>
+                    <div class="port-inline">
+                        <label class="check-item" style="margin-bottom:0;">
+                            <input type="checkbox" name="custom_port_enabled" id="custom_port_checkbox" onclick="toggleCustomPortInput(this)">
+                            Override port
+                        </label>
+                        <input type="text" name="custom_port" id="custom_port_input" placeholder="e.g. 2222" disabled oninput="restrictCustomPortInput()">
+                    </div>
+                </div>
+
+                <button class="button" type="submit" id="submitBtn">Run Ping Check</button>
+            </form>
+            <div id="loading"><span class="spinner"></span>Running checks against targets, this can take a moment...</div>
+        </div>
+
+        {% if submitted %}
+        <div class="summary-row">
+            <div class="stat"><div class="num">{{ summary.total }}</div><div class="lbl">Total Checks</div></div>
+            <div class="stat success"><div class="num">{{ summary.success }}</div><div class="lbl">Success</div></div>
+            <div class="stat failed"><div class="num">{{ summary.failed }}</div><div class="lbl">Failed Auth</div></div>
+            <div class="stat unreachable"><div class="num">{{ summary.unreachable }}</div><div class="lbl">Unreachable</div></div>
+            <div class="stat error"><div class="num">{{ summary.error }}</div><div class="lbl">Errors</div></div>
+        </div>
+
+        <div class="panel">
+            <div class="table-header-row">
+                <h2>Results <span class="elapsed">({{ summary.elapsed }}s)</span></h2>
+                <button class="button secondary" onclick="exportCSV()">Export CSV</button>
+            </div>
+
+            {% if results %}
+            <table id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>IP Address</th>
+                        <th>Service</th>
+                        <th>Port</th>
+                        <th>Status</th>
+                        <th>Detail</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in results %}
+                    <tr>
+                        <td class="mono">{{ r.ip }}</td>
+                        <td>{{ r.service }}</td>
+                        <td class="mono">{{ r.port }}</td>
+                        <td><span class="status-pill status-{{ r.status }}">{{ r.status }}</span></td>
+                        <td>{{ r.detail }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">No service was selected, or no targets were reachable.</div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function restrictCustomPortInput() {
+            var input = document.getElementById('custom_port_input');
+            var v = input.value.replace(/[^0-9]/g, '');
+            if (v !== '' ) {
+                if (parseInt(v) < 1) v = '1';
+                if (parseInt(v) > 65535) v = '65535';
+            }
+            input.value = v;
+        }
+
+        function toggleCustomPortInput(checkbox) {
+            document.getElementById('custom_port_input').disabled = !checkbox.checked;
+        }
+
+        function updateButtonLabel() {
+            const ping = document.getElementById('ping_enabled').checked;
+            const smb = document.getElementById('smb_enabled').checked;
+            const ssh = document.getElementById('ssh_enabled').checked;
+            const ftp = document.getElementById('ftp_enabled').checked;
+
+            const credServices = [];
+            if (smb) credServices.push('SMB');
+            if (ssh) credServices.push('SSH');
+            if (ftp) credServices.push('FTP');
+
+            let label;
+            if (credServices.length > 0 && ping) {
+                label = 'Run Ping + Credential Check (' + credServices.join('/') + ')';
+            } else if (credServices.length > 0) {
+                label = 'Run Credential Check (' + credServices.join('/') + ')';
+            } else if (ping) {
+                label = 'Run Ping Check';
+            } else {
+                label = 'Select at least one check above';
+            }
+            document.getElementById('submitBtn').innerText = label;
+        }
+
+        document.getElementById('checkForm').addEventListener('submit', function () {
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').innerText = 'Running...';
+            document.getElementById('loading').style.display = 'block';
+        });
+
+        // Set correct label on initial page load
+        updateButtonLabel();
+
+        function exportCSV() {
+            const table = document.getElementById('resultsTable');
+            if (!table) return;
+            let csv = [];
+            for (const row of table.rows) {
+                const cols = Array.from(row.cells).map(c => '"' + c.innerText.replace(/"/g, '""') + '"');
+                csv.push(cols.join(','));
+            }
+            const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'credential_check_results.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

@@ -42,7 +42,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Then open `http://127.0.0.1:8015` (or `http://<host-ip>:8015` if running on a remote box) in your browser.
+Then open `http://127.0.0.1:9000` (or `http://<host-ip>:9000` if running on a remote box) in your browser.
 
 1. Paste your target IP list (one per line) into the **Target IPs** box.
 2. Enter the credentials you want to validate (not required for ping-only checks).

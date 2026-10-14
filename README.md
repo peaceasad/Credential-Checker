@@ -31,7 +31,7 @@ _Add a screenshot of the UI here after your first run (e.g. `docs/screenshot.png
 ## Installation
 
 ```bash
-git clone https://github.com/<your-username>/credentials-checker.git
+git clone https://github.com/peaceasad/credentials-checker.git
 cd credentials-checker
 pip install -r requirements.txt
 ```
